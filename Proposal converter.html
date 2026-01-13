@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>MDI Proposal Engine – Prototype</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f5f5f7;
+      color: #222;
+    }
+    header {
+      background: #1e293b;
+      color: #f9fafb;
+      padding: 16px 24px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    header p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    main {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+      padding: 16px;
+    }
+    .left-panel {
+      flex: 1 1 40%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .right-panel {
+      flex: 1 1 60%;
+      max-height: calc(100vh - 80px);
+      overflow: auto;
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 16px 20px;
+      box-shadow: 0 0 0 1px #e5e7eb;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 0 0 1px #e5e7eb;
+    }
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .card h3 {
+      margin: 12px 0 6px;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    input[type="text"],
+    select,
+    textarea,
+    input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      font-size: 13px;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+    }
+    .row > div {
+      flex: 1;
+    }
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 4px 0;
+      font-size: 13px;
+    }
+    .toggle-row input {
+      transform: scale(1.1);
+    }
+    button {
+      padding: 6px 10px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid #1d4ed8;
+      background: #2563eb;
+      color: #f9fafb;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #e5e7eb;
+      border-color: #cbd5e1;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .secondary-btn {
+      background: #ffffff;
+      color: #1f2933;
+      border-color: #cbd5e1;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #eef2ff;
+      color: #3730a3;
+      margin-right: 4px;
+    }
+    .error {
+      color: #b91c1c;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .small {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 12px 0;
+    }
+    .preview h1 {
+      font-size: 20px;
+      margin: 0 0 4px;
+    }
+    .preview h2 {
+      font-size: 16px;
+      margin: 16px 0 4px;
+    }
+    .preview h3 {
+      font-size: 14px;
+      margin: 10px 0 4px;
+    }
+    .preview p {
+      font-size: 13px;
+      margin: 4px 0;
+    }
+    .preview ul {
+      margin: 4px 0 8px 22px;
+      padding: 0;
+      font-size: 13px;
+    }
+    .preview li {
+      margin: 2px 0;
+    }
+    .preview table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 4px 0 8px;
+      font-size: 13px;
+    }
+    .preview th,
+    .preview td {
+      border: 1px solid #e5e7eb;
+      padding: 4px 6px;
+    }
+    .preview th {
+      text-align: left;
+      background: #f9fafb;
+    }
+    .preview td.amount {
+      text-align: right;
+    }
+    .section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>MDI Proposal Engine – Browser Prototype</h1>
+  <p>Single-page implementation of the core logic: metadata → disciplines → scope → fees/timeline → proposal preview.</p>
+</header>
+
+<main>
+  <div class="left-panel">
+
+    <!-- MODULE 1: METADATA -->
+    <div class="card">
+      <h2>1. Project information</h2>
+      <div class="row">
+        <div>
+          <label for="projTitle">Project title</label>
+          <input id="projTitle" type="text" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="clientName">Client name</label>
+          <input id="clientName" type="text" />
+        </div>
+      </div>
+      <div>
+        <label for="projAddress">Project address</label>
+        <input id="projAddress" type="text" />
+      </div>
+      <div class="row">
+        <div>
+          <label for="jurisdiction">Jurisdiction</label>
+          <input id="jurisdiction" type="text" placeholder="e.g. City of Colorado Springs" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="region">Region</label>
+          <select id="region">
+            <option value="">Select region…</option>
+            <option value="Inland">Inland</option>
+            <option value="Gulf Coast">Gulf Coast</option>
+            <option value="Coastal Wind">Coastal Wind</option>
+            <option value="High Wind Zone">High Wind Zone</option>
+            <option value="Standard Zone">Standard Zone</option>
+          </select>
+        </div>
+        <div>
+          <label for="ircVersion">IRC version</label>
+          <select id="ircVersion">
+            <option value="">Select IRC…</option>
+            <option value="2015">2015</option>
+            <option value="2018">2018</option>
+            <option value="2021">2021</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+      </div>
+      <p id="metaError" class="error" style="display:none;"></p>
+    </div>
+
+    <!-- MODULE 2: DISCIPLINES -->
+    <div class="card">
+      <h2>2. Disciplines</h2>
+      <div class="toggle-row">
+        <span>Include Architecture</span>
+        <input type="checkbox" id="discArch" />
+      </div>
+      <div class="toggle-row">
+        <span>Include Structural</span>
+        <input type="checkbox" id="discStruct" />
+      </div>
+      <div class="toggle-row">
+        <span>Include MEP</span>
+        <input type="checkbox" id="discMEP" />
+      </div>
+      <p id="discError" class="error" style="display:none;"></p>
+    </div>
+
+    <!-- MODULE 3+4: "MS PROJECT" CSV PARSE + SCOPE -->
+    <div class="card">
+      <h2>3. Paste MS Project export (CSV)</h2>
+      <p class="small">
+        Expected columns: Task Name, Outline Level, Duration, Cost, Milestone, Discipline (optional), Notes (optional).<br>
+        Paste from Excel as CSV (one header row).
+      </p>
+      <textarea id="csvInput" placeholder="Task Name,Outline Level,Duration,Cost,Milestone,Discipline,Notes
+ARCH – Architectural Review,1,0,0,false,Architecture,
+ARCH – Plan Review,2,0,0,false,Architecture,
+Review architectural layout for consistency,3,1,200,false,Architecture,
+Verify room dimensions and clearances,3,1,200,false,Architecture,
+Issue architectural review comments,3,0,0,true,Architecture,
+STRUCT – Structural Review,1,0,0,false,Structural,
+STRUCT – Framing Review,2,0,0,false,Structural,
+Verify framing layout,3,1,250,false,Structural,
+Check header sizing,3,1,250,false,Structural,
+Deliver structural markup set,3,0,0,true,Structural,
+"></textarea>
+      <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center;">
+        <button id="parseBtn">Parse scope</button>
+        <span class="small">This is a prototype parser for CSV data.</span>
+      </div>
+      <p id="csvError" class="error" style="display:none;"></p>
+    </div>
+
+    <!-- MODULE 6+7 QUICK OVERRIDES (OPTIONAL) -->
+    <div class="card">
+      <h2>4. Overrides (optional)</h2>
+      <h3>Base duration (days)</h3>
+      <div class="row">
+        <div>
+          <label>ARCH default</label>
+          <input id="overrideArchDur" type="number" min="0" step="1" placeholder="3" />
+        </div>
+        <div>
+          <label>STRUCT default</label>
+          <input id="overrideStructDur" type="number" min="0" step="1" placeholder="4" />
+        </div>
+        <div>
+          <label>MEP default</label>
+          <input id="overrideMepDur" type="number" min="0" step="1" placeholder="2" />
+        </div>
+      </div>
+      <h3>Base fee (if no costs)</h3>
+      <div class="row">
+        <div>
+          <label>ARCH base fee</label>
+          <input id="overrideArchFee" type="number" min="0" step="50" placeholder="650" />
+        </div>
+        <div>
+          <label>STRUCT base fee</label>
+          <input id="overrideStructFee" type="number" min="0" step="50" placeholder="850" />
+        </div>
+        <div>
+          <label>MEP base fee</label>
+          <input id="overrideMepFee" type="number" min="0" step="50" placeholder="600" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <button id="buildProposalBtn">Build proposal preview</button>
+      <p id="buildError" class="error" style="display:none;"></p>
+      <p class="small" style="margin-top:6px;">This button runs the full flow: metadata → disciplines → CSV → scope → deliverables → fees/timeline → narratives → preview.</p>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL: PROPOSAL PREVIEW -->
+  <div class="right-panel">
+    <div class="section-label">Live proposal preview</div>
+    <div id="preview" class="preview">
+      <p class="small">Fill in the left panel and click "Build proposal preview" to see the assembled proposal here.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+  // Global Proposal Object
+  const proposal = {
+    metadata: {
+      title: "",
+      client: "",
+      address: "",
+      jurisdiction: "",
+      region: "",
+      irc_version: "",
+      date: ""
+    },
+    disciplines: {
+      architecture: false,
+      structural: false,
+      mep: false
+    },
+    scope: {
+      architecture: [],
+      structural: [],
+      mep: []
+    },
+    deliverables: {
+      architecture: [],
+      structural: [],
+      mep: []
+    },
+    timeline: {
+      architecture: null,
+      structural: null,
+      mep: null,
+      overall: null
+    },
+    fees: {
+      architecture: null,
+      structural: null,
+      mep: null,
+      total: null
+    },
+    narratives: {
+      architecture: {
+        scope_intro: "",
+        assumptions: [],
+        exclusions: []
+      },
+      structural: {
+        scope_intro: "",
+        assumptions: [],
+        exclusions: []
+      },
+      mep: {
+        scope_intro: "",
+        assumptions: [],
+        exclusions: []
+      },
+      codes: [],
+      coordination_notes: []
+    },
+    capabilities: {
+      statement: "",
+      about_section: ""
+    }
+  };
+
+  // Helpers
+  function show(id, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (text !== undefined && text !== null) el.textContent = text;
+    el.style.display = "block";
+  }
+  function hide(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = "none";
+  }
+  function parseBool(str) {
+    if (typeof str !== "string") return false;
+    return str.trim().toLowerCase() === "true";
+  }
+
+  // STEP 1+2: validate metadata + disciplines
+  function captureMetadataAndDisciplines() {
+    hide("metaError");
+    hide("discError");
+
+    const title = document.getElementById("projTitle").value.trim();
+    const client = document.getElementById("clientName").value.trim();
+    const address = document.getElementById("projAddress").value.trim();
+    const jurisdiction = document.getElementById("jurisdiction").value.trim();
+    const region = document.getElementById("region").value;
+    const irc = document.getElementById("ircVersion").value;
+
+    let metaErrors = [];
+    if (!title) metaErrors.push("Project title is required.");
+    if (!client) metaErrors.push("Client name is required.");
+    if (!address) metaErrors.push("Project address is required.");
+    if (!jurisdiction) metaErrors.push("Jurisdiction is required.");
+    if (!region) metaErrors.push("Region is required.");
+    if (!irc) metaErrors.push("IRC version is required.");
+
+    if (metaErrors.length > 0) {
+      show("metaError", metaErrors.join(" "));
+      return false;
+    }
+
+    proposal.metadata = {
+      title,
+      client,
+      address,
+      jurisdiction,
+      region,
+      irc_version: irc,
+      date: new Date().toISOString().slice(0, 10)
+    };
+
+    const arch = document.getElementById("discArch").checked;
+    const struct = document.getElementById("discStruct").checked;
+    const mep = document.getElementById("discMEP").checked;
+
+    if (!arch && !struct && !mep) {
+      show("discError", "Select at least one discipline.");
+      return false;
+    }
+
+    proposal.disciplines = {
+      architecture: arch,
+      structural: struct,
+      mep: mep
+    };
+
+    return true;
+  }
+
+  // STEP 4: CSV Parser (simplified)
+  function parseCSV() {
+    hide("csvError");
+    proposal.scope.architecture = [];
+    proposal.scope.structural = [];
+    proposal.scope.mep = [];
+    proposal.deliverables.architecture = [];
+    proposal.deliverables.structural = [];
+    proposal.deliverables.mep = [];
+
+    const raw = document.getElementById("csvInput").value.trim();
+    if (!raw) {
+      show("csvError", "Please paste CSV data from your MS Project export.");
+      return false;
+    }
+
+    const lines = raw.split(/\r?\n/).filter(l => l.trim() !== "");
+    if (lines.length < 2) {
+      show("csvError", "CSV must include a header row and at least one data row.");
+      return false;
+    }
+
+    const header = lines[0].split(",");
+    const colIndex = name => header.findIndex(h => h.trim().toLowerCase() === name.toLowerCase());
+
+    const idxTask = colIndex("Task Name");
+    const idxOutline = colIndex("Outline Level");
+    const idxDuration = colIndex("Duration");
+    const idxCost = colIndex("Cost");
+    const idxMilestone = colIndex("Milestone");
+    const idxDiscipline = colIndex("Discipline");
+    const idxNotes = colIndex("Notes");
+
+    const missing = [];
+    if (idxTask === -1) missing.push("Task Name");
+    if (idxOutline === -1) missing.push("Outline Level");
+    if (idxDuration === -1) missing.push("Duration");
+    if (idxCost === -1) missing.push("Cost");
+    if (idxMilestone === -1) missing.push("Milestone");
+
+    if (missing.length > 0) {
+      show("csvError", "Missing required columns: " + missing.join(", "));
+      return false;
+    }
+
+    // Internal WBS structure before building phases
+    const tasks = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",");
+      if (parts.length < header.length) continue;
+
+      const name = parts[idxTask].trim();
+      if (!name) continue;
+
+      const outlineLevel = parseInt(parts[idxOutline].trim(), 10);
+      const duration = parseFloat(parts[idxDuration].trim() || "0");
+      const cost = parseFloat(parts[idxCost].trim() || "0");
+      const milestone = parseBool(parts[idxMilestone]);
+      const disciplineRaw = idxDiscipline !== -1 ? parts[idxDiscipline].trim() : "";
+      const notes = idxNotes !== -1 ? parts[idxNotes].trim() : "";
+
+      // Discipline inference
+      let discipline = null;
+      if (disciplineRaw) {
+        const dr = disciplineRaw.toLowerCase();
+        if (dr.startsWith("arch")) discipline = "architecture";
+        else if (dr.startsWith("struct")) discipline = "structural";
+        else if (dr === "mep") discipline = "mep";
+      } else {
+        const lowerName = name.toLowerCase();
+        if (lowerName.startsWith("arch")) discipline = "architecture";
+        else if (lowerName.startsWith("struct")) discipline = "structural";
+        else if (lowerName.startsWith("mep")) discipline = "mep";
+      }
+
+      tasks.push({
+        name,
+        outlineLevel,
+        duration: isNaN(duration) ? 0 : duration,
+        cost: isNaN(cost) ? 0 : cost,
+        milestone,
+        discipline,
+        notes
+      });
+    }
+
+    if (tasks.length === 0) {
+      show("csvError", "No valid tasks found in CSV.");
+      return false;
+    }
+
+    // Build phases + client tasks + internal tasks per discipline
+    const scopes = {
+      architecture: [],
+      structural: [],
+      mep: []
+    };
+    const deliverables = {
+      architecture: [],
+      structural: [],
+      mep: []
+    };
+
+    const activePhase = {
+      architecture: null,
+      structural: null,
+      mep: null
+    };
+
+    for (const t of tasks) {
+      if (!t.discipline) continue;
+      const disc = t.discipline;
+
+      // Milestones -> deliverables
+      if (t.milestone) {
+        deliverables[disc].push(t.name);
+      }
+
+      if (t.outlineLevel === 1) {
+        // Discipline header – ignore for scope phases
+        continue;
+      } else if (t.outlineLevel === 2) {
+        // Phase
+        const phaseName = t.name.replace(/^ARCH\s*–\s*|^STRUCT\s*–\s*|^MEP\s*–\s*/i, "").trim();
+        const phaseObj = {
+          phase_name: phaseName,
+          tasks: [],
+          internal: []
+        };
+        scopes[disc].push(phaseObj);
+        activePhase[disc] = phaseObj;
+      } else if (t.outlineLevel === 3) {
+        // Client-visible task
+        if (!activePhase[disc]) {
+          const fallback = {
+            phase_name: "General",
+            tasks: [],
+            internal: []
+          };
+          scopes[disc].push(fallback);
+          activePhase[disc] = fallback;
+        }
+        activePhase[disc].tasks.push(t.name);
+      } else if (t.outlineLevel >= 4) {
+        // Internal
+        if (!activePhase[disc]) {
+          const fallback = {
+            phase_name: "General",
+            tasks: [],
+            internal: []
+          };
+          scopes[disc].push(fallback);
+          activePhase[disc] = fallback;
+        }
+        activePhase[disc].internal.push(t.name);
+      }
+    }
+
+    proposal.scope = scopes;
+    proposal.deliverables = deliverables;
+    proposal._rawTasks = tasks; // keep for fee/timeline
+
+    return true;
+  }
+
+  // STEP 6: Deliverables defaults
+  function ensureDeliverables() {
+    const disc = proposal.disciplines;
+
+    if (disc.architecture && proposal.deliverables.architecture.length === 0) {
+      proposal.deliverables.architecture = [
+        "Architectural review comments",
+        "Marked-up architectural plan set (if applicable)"
+      ];
+    }
+    if (disc.structural && proposal.deliverables.structural.length === 0) {
+      proposal.deliverables.structural = [
+        "Structural review comments",
+        "Structural markup set"
+      ];
+    }
+    if (disc.mep && proposal.deliverables.mep.length === 0) {
+      proposal.deliverables.mep = [
+        "MEP coordination comments",
+        "Marked-up MEP plan sheets"
+      ];
+    }
+  }
+
+  // STEP 7: Timeline
+  function computeTimeline() {
+    const raw = proposal._rawTasks || [];
+    const discDur = {
+      architecture: 0,
+      structural: 0,
+      mep: 0
+    };
+
+    for (const t of raw) {
+      if (!t.discipline) continue;
+      if (!proposal.disciplines[t.discipline]) continue;
+      discDur[t.discipline] += t.duration || 0;
+    }
+
+    // Override or defaults if 0
+    const oArch = parseInt(document.getElementById("overrideArchDur").value || "0", 10);
+    const oStruct = parseInt(document.getElementById("overrideStructDur").value || "0", 10);
+    const oMep = parseInt(document.getElementById("overrideMepDur").value || "0", 10);
+
+    if (proposal.disciplines.architecture) {
+      if (discDur.architecture <= 0) discDur.architecture = oArch || 3;
+    } else {
+      discDur.architecture = null;
+    }
+    if (proposal.disciplines.structural) {
+      if (discDur.structural <= 0) discDur.structural = oStruct || 4;
+    } else {
+      discDur.structural = null;
+    }
+    if (proposal.disciplines.mep) {
+      if (discDur.mep <= 0) discDur.mep = oMep || 2;
+    } else {
+      discDur.mep = null;
+    }
+
+    let overall = 0;
+    ["architecture", "structural", "mep"].forEach(d => {
+      if (discDur[d] && discDur[d] > overall) overall = discDur[d];
+    });
+    if (overall === 0) overall = null;
+
+    proposal.timeline = {
+      architecture: discDur.architecture,
+      structural: discDur.structural,
+      mep: discDur.mep,
+      overall
+    };
+  }
+
+  // STEP 8: Fees
+  function computeFees() {
+    const raw = proposal._rawTasks || [];
+    const discFees = {
+      architecture: 0,
+      structural: 0,
+      mep: 0
+    };
+    const feeFromCosts = {
+      architecture: false,
+      structural: false,
+      mep: false
+    };
+
+    for (const t of raw) {
+      if (!t.discipline) continue;
+      if (!proposal.disciplines[t.discipline]) continue;
+      if (t.cost && t.cost > 0) {
+        discFees[t.discipline] += t.cost;
+        feeFromCosts[t.discipline] = true;
+      }
+    }
+
+    const oArchFee = parseFloat(document.getElementById("overrideArchFee").value || "0");
+    const oStructFee = parseFloat(document.getElementById("overrideStructFee").value || "0");
+    const oMepFee = parseFloat(document.getElementById("overrideMepFee").value || "0");
+
+    const result = {
+      architecture: null,
+      structural: null,
+      mep: null,
+      total: 0
+    };
+
+    if (proposal.disciplines.architecture) {
+      if (feeFromCosts.architecture && discFees.architecture > 0) {
+        result.architecture = discFees.architecture;
+      } else if (oArchFee > 0) {
+        result.architecture = oArchFee;
+      } else {
+        result.architecture = 650;
+      }
+      result.total += result.architecture;
+    }
+
+    if (proposal.disciplines.structural) {
+      if (feeFromCosts.structural && discFees.structural > 0) {
+        result.structural = discFees.structural;
+      } else if (oStructFee > 0) {
+        result.structural = oStructFee;
+      } else {
+        result.structural = 850;
+      }
+      result.total += result.structural;
+    }
+
+    if (proposal.disciplines.mep) {
+      if (feeFromCosts.mep && discFees.mep > 0) {
+        result.mep = discFees.mep;
+      } else if (oMepFee > 0) {
+        result.mep = oMepFee;
+      } else {
+        result.mep = 600;
+      }
+      result.total += result.mep;
+    }
+
+    if (result.total === 0) result.total = null;
+    proposal.fees = result;
+  }
+
+  // STEP 9: Narratives & Codes (default)
+  function populateNarratives() {
+    const meta = proposal.metadata;
+
+    if (proposal.disciplines.architecture) {
+      proposal.narratives.architecture.scope_intro =
+        "Our architectural review focuses on layout consistency, coordination, and constructability for the proposed design.";
+      proposal.narratives.architecture.assumptions = [
+        "Architectural plans provided are complete and coordinated.",
+        "Any significant redesign requested after review may affect fee and timeline."
+      ];
+      proposal.narratives.architecture.exclusions = [
+        "Full architectural redesign services.",
+        "Interior design and detailed finishes selections."
+      ];
+    }
+    if (proposal.disciplines.structural) {
+      proposal.narratives.structural.scope_intro =
+        "Our structural review covers framing layout, load paths, bearing conditions, and constructability.";
+      proposal.narratives.structural.assumptions = [
+        "Structural or framing plans provided are current and reflect intended construction.",
+        "Soils and geotechnical conditions are suitable for the proposed design unless otherwise noted."
+      ];
+      proposal.narratives.structural.exclusions = [
+        "Foundation redesign unless specifically requested.",
+        "Soil testing or geotechnical evaluation."
+      ];
+    }
+    if (proposal.disciplines.mep) {
+      proposal.narratives.mep.scope_intro =
+        "Our MEP review includes mechanical, electrical, and plumbing layouts with a focus on coordination and code compliance.";
+      proposal.narratives.mep.assumptions = [
+        "Mechanical, electrical, and plumbing layouts are included in the plan set.",
+        "Equipment selections are typical for residential construction unless noted otherwise."
+      ];
+      proposal.narratives.mep.exclusions = [
+        "Detailed load calculations beyond typical residential practice unless requested.",
+        "Energy modeling and specialized performance analysis."
+      ];
+    }
+
+    const codes = [];
+    if (meta.irc_version) {
+      codes.push("IRC " + meta.irc_version);
+    }
+    codes.push("NEC (Electrical)");
+    codes.push("IPC (Plumbing)");
+    codes.push("IMC (Mechanical)");
+    if (meta.region && meta.region.toLowerCase().includes("wind")) {
+      codes.push("ASCE 7 wind load requirements for " + meta.region);
+    }
+
+    proposal.narratives.codes = codes;
+    proposal.narratives.coordination_notes = [
+      "Coordination between architecture and structural framing.",
+      "Coordination between structural elements and MEP penetrations.",
+      "Field constructability considerations where applicable."
+    ];
+
+    proposal.capabilities.statement =
+      "MDI & Associates provides coordinated Architectural, Structural, and MEP review services with clear markups and practical feedback.";
+    proposal.capabilities.about_section =
+      "MDI & Associates is a multidisciplinary practice focused on helping builders move projects from design to construction with clear, actionable documentation and fast turnaround.";
+  }
+
+  // STEP 10–12: Build preview HTML
+  function renderPreview() {
+    const p = proposal;
+    const el = document.getElementById("preview");
+    const fmtMoney = n => (n == null ? "" : "$" + n.toLocaleString(undefined, { maximumFractionDigits: 0 }));
+    const hasArch = p.disciplines.architecture;
+    const hasStruct = p.disciplines.structural;
+    const hasMep = p.disciplines.mep;
+
+    let html = "";
+
+    // Header
+    html += `<h1>${p.metadata.title || "Project Proposal"}</h1>`;
+    html += `<p><strong>Client:</strong> ${p.metadata.client || ""}</p>`;
+    html += `<p><strong>Project address:</strong> ${p.metadata.address || ""}</p>`;
+    html += `<p><strong>Jurisdiction:</strong> ${p.metadata.jurisdiction || ""}</p>`;
+    html += `<p><strong>Region:</strong> ${p.metadata.region || ""} &nbsp; | &nbsp; <strong>IRC:</strong> ${p.metadata.irc_version || ""}</p>`;
+    html += `<p><strong>Date:</strong> ${p.metadata.date || ""}</p>`;
+
+    // 1. Project understanding / capability
+    html += `<h2>1. Project understanding</h2>`;
+    html += `<p>${p.capabilities.statement}</p>`;
+
+    // 2. Scope of work
+    html += `<h2>2. Scope of work</h2>`;
+
+    if (hasArch) {
+      html += `<h3>2.1 Architectural scope</h3>`;
+      html += `<p>${p.narratives.architecture.scope_intro}</p>`;
+      const phases = p.scope.architecture || [];
+      phases.forEach(ph => {
+        html += `<p><strong>${ph.phase_name}</strong></p>`;
+        if (ph.tasks && ph.tasks.length) {
+          html += "<ul>";
+          ph.tasks.forEach(t => {
+            html += `<li>${t}</li>`;
+          });
+          html += "</ul>";
+        }
+      });
+    }
+
+    if (hasStruct) {
+      html += `<h3>${hasArch ? "2.2" : "2.1"} Structural scope</h3>`;
+      html += `<p>${p.narratives.structural.scope_intro}</p>`;
+      const phases = p.scope.structural || [];
+      phases.forEach(ph => {
+        html += `<p><strong>${ph.phase_name}</strong></p>`;
+        if (ph.tasks && ph.tasks.length) {
+          html += "<ul>";
+          ph.tasks.forEach(t => {
+            html += `<li>${t}</li>`;
+          });
+          html += "</ul>";
+        }
+      });
+    }
+
+    if (hasMep) {
+      let idx = 2.1;
+      if (hasArch && hasStruct) idx = "2.3";
+      else if (hasArch || hasStruct) idx = "2.2";
+      else idx = "2.1";
+      html += `<h3>${idx} MEP scope</h3>`;
+      html += `<p>${p.narratives.mep.scope_intro}</p>`;
+      const phases = p.scope.mep || [];
+      phases.forEach(ph => {
+        html += `<p><strong>${ph.phase_name}</strong></p>`;
+        if (ph.tasks && ph.tasks.length) {
+          html += "<ul>";
+          ph.tasks.forEach(t => {
+            html += `<li>${t}</li>`;
+          });
+          html += "</ul>";
+        }
+      });
+    }
+
+    // 3. Deliverables
+    html += `<h2>3. Deliverables</h2>`;
+    if (hasArch && p.deliverables.architecture.length) {
+      html += `<p><strong>Architectural deliverables</strong></p><ul>`;
+      p.deliverables.architecture.forEach(d => (html += `<li>${d}</li>`));
+      html += "</ul>";
+    }
+    if (hasStruct && p.deliverables.structural.length) {
+      html += `<p><strong>Structural deliverables</strong></p><ul>`;
+      p.deliverables.structural.forEach(d => (html += `<li>${d}</li>`));
+      html += "</ul>";
+    }
+    if (hasMep && p.deliverables.mep.length) {
+      html += `<p><strong>MEP deliverables</strong></p><ul>`;
+      p.deliverables.mep.forEach(d => (html += `<li>${d}</li>`));
+      html += "</ul>";
+    }
+
+    // 4. Timeline
+    html += `<h2>4. Timeline</h2>`;
+    if (p.timeline.overall) {
+      html += `<p><strong>Overall duration:</strong> ${p.timeline.overall} business days (typical)</p>`;
+    } else {
+      html += `<p>Timeline will be confirmed upon receipt of complete documents.</p>`;
+    }
+    html += `<table><thead><tr><th>Discipline</th><th>Duration (business days)</th></tr></thead><tbody>`;
+    if (hasArch && p.timeline.architecture != null) {
+      html += `<tr><td>Architecture</td><td>${p.timeline.architecture}</td></tr>`;
+    }
+    if (hasStruct && p.timeline.structural != null) {
+      html += `<tr><td>Structural</td><td>${p.timeline.structural}</td></tr>`;
+    }
+    if (hasMep && p.timeline.mep != null) {
+      html += `<tr><td>MEP</td><td>${p.timeline.mep}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+    html += `<p class="small">Timeline assumes complete and coordinated documents. Significant revisions or missing information may affect durations.</p>`;
+
+    // 5. Fee summary
+    html += `<h2>5. Fee summary</h2>`;
+    if (!p.fees.total) {
+      html += `<p>Fees will be confirmed after full review of project scope.</p>`;
+    } else {
+      html += `<table><thead><tr><th>Discipline</th><th>Fee</th></tr></thead><tbody>`;
+      if (hasArch && p.fees.architecture != null) {
+        html += `<tr><td>Architecture</td><td class="amount">${fmtMoney(p.fees.architecture)}</td></tr>`;
+      }
+      if (hasStruct && p.fees.structural != null) {
+        html += `<tr><td>Structural</td><td class="amount">${fmtMoney(p.fees.structural)}</td></tr>`;
+      }
+      if (hasMep && p.fees.mep != null) {
+        html += `<tr><td>MEP</td><td class="amount">${fmtMoney(p.fees.mep)}</td></tr>`;
+      }
+      html += `<tr><td><strong>Total</strong></td><td class="amount"><strong>${fmtMoney(p.fees.total)}</strong></td></tr>`;
+      html += `</tbody></table>`;
+      html += `<p class="small">Fees are based on the scope and documents provided. Significant changes in scope may affect the final fee.</p>`;
+    }
+
+    // 6. Assumptions
+    html += `<h2>6. Assumptions</h2>`;
+    if (hasArch && p.narratives.architecture.assumptions.length) {
+      html += `<p><strong>Architectural assumptions</strong></p><ul>`;
+      p.narratives.architecture.assumptions.forEach(a => (html += `<li>${a}</li>`));
+      html += "</ul>";
+    }
+    if (hasStruct && p.narratives.structural.assumptions.length) {
+      html += `<p><strong>Structural assumptions</strong></p><ul>`;
+      p.narratives.structural.assumptions.forEach(a => (html += `<li>${a}</li>`));
+      html += "</ul>";
+    }
+    if (hasMep && p.narratives.mep.assumptions.length) {
+      html += `<p><strong>MEP assumptions</strong></p><ul>`;
+      p.narratives.mep.assumptions.forEach(a => (html += `<li>${a}</li>`));
+      html += "</ul>";
+    }
+
+    // 7. Exclusions
+    html += `<h2>7. Exclusions</h2>`;
+    if (hasArch && p.narratives.architecture.exclusions.length) {
+      html += `<p><strong>Architectural exclusions</strong></p><ul>`;
+      p.narratives.architecture.exclusions.forEach(e => (html += `<li>${e}</li>`));
+      html += "</ul>";
+    }
+    if (hasStruct && p.narratives.structural.exclusions.length) {
+      html += `<p><strong>Structural exclusions</strong></p><ul>`;
+      p.narratives.structural.exclusions.forEach(e => (html += `<li>${e}</li>`));
+      html += "</ul>";
+    }
+    if (hasMep && p.narratives.mep.exclusions.length) {
+      html += `<p><strong>MEP exclusions</strong></p><ul>`;
+      p.narratives.mep.exclusions.forEach(e => (html += `<li>${e}</li>`));
+      html += "</ul>";
+    }
+
+    // 8. Codes
+    html += `<h2>8. Applicable codes</h2>`;
+    if (p.narratives.codes.length) {
+      html += "<ul>";
+      p.narratives.codes.forEach(c => (html += `<li>${c}</li>`));
+      html += "</ul>";
+    }
+
+    // 9. About MDI
+    html += `<h2>9. About MDI</h2>`;
+    html += `<p>${p.capabilities.about_section}</p>`;
+
+    el.innerHTML = html;
+  }
+
+  // MAIN BUTTONS
+  document.getElementById("parseBtn").addEventListener("click", () => {
+    hide("buildError");
+    const ok = parseCSV();
+    if (ok) {
+      show("csvError", "Scope parsed successfully. Now click 'Build proposal preview' to assemble the document.");
+      document.getElementById("csvError").style.color = "#166534";
+    } else {
+      document.getElementById("csvError").style.color = "#b91c1c";
+    }
+  });
+
+  document.getElementById("buildProposalBtn").addEventListener("click", () => {
+    document.getElementById("csvError").style.color = "#b91c1c";
+    hide("buildError");
+
+    const metaOk = captureMetadataAndDisciplines();
+    if (!metaOk) {
+      show("buildError", "Please fix project information and discipline selection.");
+      return;
+    }
+    const csvOk = parseCSV();
+    if (!csvOk) {
+      show("buildError", "Please fix CSV input before building the proposal.");
+      return;
+    }
+
+    ensureDeliverables();
+    computeTimeline();
+    computeFees();
+    populateNarratives();
+    renderPreview();
+  });
+</script>
+</body>
+</html>
